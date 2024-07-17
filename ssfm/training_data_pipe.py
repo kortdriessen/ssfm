@@ -30,6 +30,25 @@ def load_base_data(subject, rec, probe, channel):
     emg_power = espg.sum(dim='frequency')
     return ds_dat, emg_power
 
+def save_full_data(subject, rec, probe, channel):
+    print(f'Loading data for {subject}--{rec}--{probe}-{channel}')
+    path = acr.io.acr_path(subject, rec)
+    h = acr.io.load_hypno(subject, rec, corrections=True, update=False, float=False)
+    total_duration = (h.end_time.max() - h.start_time.min()).total_seconds()
+    assert total_duration > (3600*5), f'Recording too short, should be at least 5 hours {subject}--{rec}--{total_duration}'
+    dat = kde.xr.io.get_data(path, store=probe, channel=channel, t1=0, t2=total_duration)
+    emg = kde.xr.io.get_data(path, store='EMGr', channel=1, t1=0, t2=total_duration)
+    
+    dat = dat.sel(datetime=slice(h.start_time.min(), h.end_time.max()))
+    emg = emg.sel(datetime=slice(h.start_time.min(), h.end_time.max()))
+    
+    ds_dat = kde.xr.utils.decimate(dat, q=24)
+    ds_dat = kde.xr.utils.decimate(ds_dat, 10)
+    ds_emg = kde.xr.utils.decimate(emg, q=10)
+    save_root = '/Volumes/neuropixel_archive/Data/acr_archive/ssfm/training/full_data'
+    np.save(f'{save_root}/LFP__{subject}--{rec}--{probe}{channel}.npy', ds_dat.values)
+    np.save(f'{save_root}/EMG__{subject}--{rec}--{probe}{channel}.npy', ds_emg.values)
+
 def extract_features(ds_dat, emg_power):
     spg = kde.xr.spectral.get_spextrogram(ds_dat) 
     assert spg.shape[1] == emg_power.shape[0], f'spectral shapes do no match'

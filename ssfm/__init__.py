@@ -1,7 +1,6 @@
 from . import (
-    data_pipe,
     eval,
     model_def,
-    run_pipe,
     train,
+    training_data_pipe,
 )

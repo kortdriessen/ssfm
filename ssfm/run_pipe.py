@@ -1,9 +1,10 @@
-from data_pipe import full_pipe
+from ssfm.ssfm.training_data_pipe import full_pipe
 import pandas as pd
 import concurrent.futures
-
-master_df = pd.read_csv('data_qual/master_delta_ratio.csv')
+#path = ''
+#master_df = pd.read_csv('data_qual/master_delta_ratio.csv')
 tup_list = []
+
 for row in master_df.itertuples(): 
     tup_list.append((row[1], row[2], row[3], row[4]))
 for t in tup_list:
